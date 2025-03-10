@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Chat - App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .phone-frame {
+            width: 375px;
+            height: 667px;
+            border-radius: 36px;
+            border: 16px solid #000;
+            background-color: #fff;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        .phone-content {
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        .alert {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+        p {
+            margin-top: 10px;
+        }
+        #logout-btn {
+            width: auto;
+            background-color: #ff5722;
+            color: white;
+            font-size: 14px;
+        }
+        #add-friend-container {
+            margin-top: 20px;
+        }
+        #friend-list {
+            margin-top: 20px;
+            text-align: left;
+            list-style-type: none;
+            padding-left: 0;
+        }
+        #friend-list li {
+            background-color: #e0e0e0;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        #chat-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 500px;
+            display: none;
+            text-align: left;
+        }
+        #chat-window {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        #chat-input {
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            width: calc(100% - 22px);
+        }
+        #send-message-btn {
+            padding: 10px;
+            margin-top: 10px;
+            width: 100%;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #4caf50;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+        }
+        #welcome-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #4caf50;
+            color: white;
+            z-index: 10;
+        }
+        #go-back-btn {
+            background-color: #ccc;
+            color: black;
+            font-size: 14px;
+            width: auto;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #settings-btn {
+            background-color: #2196F3;
+            color: white;
+            font-size: 14px;
+            width: auto;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        #settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #settings-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+        #settings-modal input {
+            margin: 10px 0;
+        }
+        #settings-modal button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="phone-content">
+            <div id="splash-screen">Welcome to Cloud Chat</div>
+            <div id="welcome-page" style="display: none;">Welcome to Cloud Chat! Loading...</div>
+
+            <div class="container" id="create-account-container" style="display: none;">
+                <h2>Create Your Account</h2>
+                <form id="account-form">
+                    <input type="text" id="username" placeholder="Username" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <input type="text" id="contact" placeholder="Contact Number" required>
+                    <input type="file" id="profile-picture" accept="image/*">
+                    <button type="submit">Create Account</button>
+                </form>
+                <div id="alert-message" class="alert">Please fill all the required details.</div>
+                <p>Already have an account? <a href="#" onclick="showLoginPage()">Log In</a></p>
+                <button id="go-back-btn" onclick="showLoginPage()">←</button>
+            </div>
+
+            <div class="container" id="login-container">
+                <h2>Login to Cloud Chat</h2>
+                <form id="login-form">
+                    <input type="text" id="login-username" placeholder="Username" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                </form>
+                <div id="login-alert-message" class="alert">Incorrect username or password.</div>
+                <p>Don't have an account? <a href="#" onclick="showCreateAccountPage()">Create Account</a></p>
+                <button id="go-back-btn" onclick="showCreateAccountPage()">←</button>
+            </div>
+
+            <div class="container" id="main-container" style="display: none;">
+                <h2>Welcome to Cloud Chat</h2>
+                <div id="add-friend-container">
+                    <input type="text" id="friend-username" placeholder="Enter friend's username">
+                    <button id="add-friend-btn">Add Friend</button>
+                    <div id="add-friend-alert" class="alert">Friend added successfully!</div>
+                </div>
+                <ul id="friend-list"></ul>
+                <button id="logout-btn">Logout</button>
+                <button id="settings-btn">Settings</button>
+                <button id="go-back-btn" onclick="showLoginPage()">←</button>
+            </div>
+
+            <div id="chat-container" style="display: none;">
+                <h2 id="chat-with">Chat with: </h2>
+                <div id="chat-window"></div>
+                <input type="text" id="chat-input" placeholder="Type a message...">
+                <button id="send-message-btn">Send</button>
+                <button id="go-back-btn" onclick="showMainPage()">←</button>
+            </div>
+
+            <!-- Settings Modal -->
+            <div id="settings-modal">
+                <div id="settings-modal-content">
+                    <h3>Update Profile</h3>
+                    <input type="text" id="update-username" placeholder="New Username" value="">
+                    <input type="password" id="update-password" placeholder="New Password">
+                    <input type="text" id="update-contact" placeholder="New Contact Number" value="">
+                    <input type="file" id="update-profile-picture" accept="image/*">
+                    <button id="save-settings-btn">Save Changes</button>
+                    <button id="cancel-settings-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const createAccountContainer = document.getElementById('create-account-container');
+        const loginContainer = document.getElementById('login-container');
+        const mainContainer = document.getElementById('main-container');
+        const alertMessage = document.getElementById('alert-message');
+        const loginAlertMessage = document.getElementById('login-alert-message');
+        const logoutBtn = document.getElementById('logout-btn');
+        const addFriendAlert = document.getElementById('add-friend-alert');
+        const friendList = document.getElementById('friend-list');
+        const splashScreen = document.getElementById('splash-screen');
+        const welcomePage = document.getElementById('welcome-page');
+        const chatContainer = document.getElementById('chat-container');
+        const chatWindow = document.getElementById('chat-window');
+        const chatInput = document.getElementById('chat-input');
+        const sendMessageBtn = document.getElementById('send-message-btn');
+        const chatWithHeader = document.getElementById('chat-with');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const saveSettingsBtn = document.getElementById('save-settings-btn');
+        const cancelSettingsBtn = document.getElementById('cancel-settings-btn');
+        const updateUsername = document.getElementById('update-username');
+        const updatePassword = document.getElementById('update-password');
+        const updateContact = document.getElementById('update-contact');
+        const updateProfilePicture = document.getElementById('update-profile-picture');
+
+        let loggedInUser = null;
+
+        // Show Create Account page
+        function showCreateAccountPage() {
+            createAccountContainer.style.display = 'block';
+            loginContainer.style.display = 'none';
+            mainContainer.style.display = 'none';
+            chatContainer.style.display = 'none';
+        }
+
+        // Show Login page
+        function showLoginPage() {
+            createAccountContainer.style.display = 'none';
+            loginContainer.style.display = 'block';
+            mainContainer.style.display = 'none';
+            chatContainer.style.display = 'none';
+        }
+
+        // Show Main page (Logged in)
+        function showMainPage() {
+            createAccountContainer.style.display = 'none';
+            loginContainer.style.display = 'none';
+            mainContainer.style.display = 'block';
+            chatContainer.style.display = 'none';
+        }
+
+        // Show Chat page
+        function showChatPage(friendUsername) {
+            mainContainer.style.display = 'none';
+            createAccountContainer.style.display = 'none';
+            loginContainer.style.display = 'none';
+            chatContainer.style.display = 'block';
+            chatWithHeader.textContent = `Chat with: ${friendUsername}`;
+            displayChatMessages(friendUsername);
+        }
+
+        // Handle Create Account form submission
+        document.getElementById('account-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const contact = document.getElementById('contact').value;
+
+            if (!username || !password || !contact) {
+                alertMessage.textContent = 'Please fill all the required details.';
+                alertMessage.style.display = 'block';
+            } else {
+                alertMessage.style.display = 'none';
+                const userDetails = { 
+                    username, 
+                    password, 
+                    contact, 
+                    friends: [], 
+                    chats: {} 
+                };
+                localStorage.setItem('userDetails', JSON.stringify(userDetails));
+                showLoginPage();
+            }
+        });
+
+        // Handle Login form submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            const storedUser = JSON.parse(localStorage.getItem('userDetails'));
+            if (storedUser && storedUser.username === username && storedUser.password === password) {
+                loggedInUser = storedUser;
+                localStorage.setItem('loggedInUser', JSON.stringify(storedUser));
+                showMainPage();
+                displayFriends();
+            } else {
+                loginAlertMessage.style.display = 'block';
+            }
+        });
+
+        // Handle logout functionality
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('loggedInUser');
+            loggedInUser = null;
+            showLoginPage();
+        });
+
+        // Handle Add Friend functionality
+        document.getElementById('add-friend-btn').addEventListener('click', function() {
+            const friendUsername = document.getElementById('friend-username').value;
+            if (friendUsername) {
+                if (!loggedInUser.friends.includes(friendUsername)) {
+                    loggedInUser.friends.push(friendUsername);
+                    localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                    addFriendAlert.style.display = 'block';
+                    setTimeout(function() { addFriendAlert.style.display = 'none'; }, 3000);
+                    displayFriends();
+                }
+            }
+        });
+
+        // Function to display friends list
+        function displayFriends() {
+            friendList.innerHTML = '';
+            loggedInUser.friends.forEach(function(friend) {
+                const li = document.createElement('li');
+                li.textContent = friend;
+                li.addEventListener('click', function() {
+                    showChatPage(friend);
+                });
+                friendList.appendChild(li);
+            });
+        }
+
+        // Function to display chat messages
+        function displayChatMessages(friendUsername) {
+            chatWindow.innerHTML = '';
+            const chatHistory = loggedInUser.chats[friendUsername] || [];
+            chatHistory.forEach(function(chatMessage) {
+                const div = document.createElement('div');
+                div.textContent = `${chatMessage.sender}: ${chatMessage.message}`;
+                chatWindow.appendChild(div);
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // Send a message
+        sendMessageBtn.addEventListener('click', function() {
+            const message = chatInput.value.trim();
+            if (message) {
+                const friendUsername = chatWithHeader.textContent.split(': ')[1];
+                if (!loggedInUser.chats[friendUsername]) {
+                    loggedInUser.chats[friendUsername] = [];
+                }
+
+                loggedInUser.chats[friendUsername].push({ sender: loggedInUser.username, message });
+                localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+
+                displayChatMessages(friendUsername);
+                chatInput.value = '';
+            }
+        });
+
+        // Show settings modal
+        settingsBtn.addEventListener('click', function() {
+            updateUsername.value = loggedInUser.username;
+            updatePassword.value = loggedInUser.password;
+            updateContact.value = loggedInUser.contact;
+            settingsModal.style.display = 'flex';
+        });
+
+        // Save profile settings
+        saveSettingsBtn.addEventListener('click', function() {
+            const newUsername = updateUsername.value;
+            const newPassword = updatePassword.value;
+            const newContact = updateContact.value;
+            const newProfilePicture = updateProfilePicture.files[0];
+
+            if (newUsername) loggedInUser.username = newUsername;
+            if (newPassword) loggedInUser.password = newPassword;
+            if (newContact) loggedInUser.contact = newContact;
+
+            if (newProfilePicture) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    loggedInUser.profilePicture = event.target.result;
+                    localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                };
+                reader.readAsDataURL(newProfilePicture);
+            } else {
+                localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+            }
+
+            settingsModal.style.display = 'none';
+            alert('Profile updated successfully!');
+        });
+
+        // Cancel settings
+        cancelSettingsBtn.addEventListener('click', function() {
+            settingsModal.style.display = 'none';
+        });
+
+        // Show the splash screen and then the login page
+        window.onload = function() {
+            setTimeout(function() {
+                splashScreen.style.display = 'none';
+                welcomePage.style.display = 'none';
+                if (localStorage.getItem('loggedInUser')) {
+                    loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+                    showMainPage();
+                    displayFriends();
+                } else {
+                    showLoginPage();
+                }
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
